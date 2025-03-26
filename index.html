@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>儿童视力测试</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div id="welcome-screen" class="screen active">
-            <h1>儿童趣味视力测试</h1>
-            <p>适合4岁左右的小朋友</p>
-            <p>请将设备放置在距离小朋友2米远的位置</p>
+            <h1>趣味视力测试</h1>
+            <div class="welcome-image">
+                <span class="welcome-emoji">🐱🐶🐰🐻🦁</span>
+            </div>
+            <p>小朋友你好！欢迎来做视力测试。</p>
+            <p>请将设备放在离小朋友<strong>2米远</strong>的地方。</p>
             <div class="test-options">
-                <button onclick="startTest('animals')">动物识别测试</button>
-                <button onclick="startTest('direction')">动物朝向测试</button>
-                <button onclick="startTest('missing')">找出缺失部分</button>
-                <button onclick="startTest('matching')">动物配对游戏</button>
-                <button onclick="startTest('differences')">找不同游戏</button>
+                <button onclick="startTest('animals')">🐱 动物识别测试</button>
+                <button onclick="startTest('direction')">⬆️ 箭头方向测试</button>
             </div>
         </div>
 
@@ -32,12 +33,14 @@
         </div>
         
         <div id="result-screen" class="screen">
-            <h2>测试完成!</h2>
+            <h2>测试完成! 🎉</h2>
+            <div class="result-emoji">😊</div>
             <p id="result-message"></p>
-            <button onclick="goHome()">返回首页</button>
+            <button onclick="goHome()">再测一次</button>
+            <button onclick="window.print()" class="print-btn">打印结果</button>
         </div>
     </div>
     
-    <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 </body>
 </html>

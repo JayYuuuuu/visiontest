@@ -164,6 +164,25 @@ const sizeLevels = [8, 6, 4, 3, 2, 1.5, 1, 0.8];
 // 成功回答的最小尺寸
 let smallestSuccessSize = 8;
 
+// 箭头测试配置
+const arrowTest = {
+    colors: [
+        { name: '红色', value: '#ff0000' },
+        { name: '蓝色', value: '#0000ff' },
+        { name: '绿色', value: '#00ff00' },
+        { name: '黄色', value: '#ffa500' },
+        { name: '紫色', value: '#800080' },
+        { name: '橙色', value: '#ff6b00' }
+    ],
+    directions: [
+        { symbol: '<i class="fas fa-arrow-up"></i>', name: '上' },
+        { symbol: '<i class="fas fa-arrow-down"></i>', name: '下' },
+        { symbol: '<i class="fas fa-arrow-left"></i>', name: '左' },
+        { symbol: '<i class="fas fa-arrow-right"></i>', name: '右' }
+    ],
+    mode: 'single' // 'single' 或 'multiple'
+};
+
 // 开始测试
 function startTest(testType) {
     currentTest = testType;
@@ -223,41 +242,59 @@ function prepareQuestions() {
             }
             break;
         case 'direction':
-            // 动物朝向测试
-            // 创建一个已使用动物的集合，确保不会在短时间内重复
-            const usedDirectionAnimals = new Set();
-            // 深拷贝动物数组，不修改原数组
-            let availableDirectionAnimals = [...animalDirections];
-            
+            // 箭头测试
             for (let i = 0; i < sizeLevels.length; i++) {
-                // 确保我们有足够多的动物可选
-                if (availableDirectionAnimals.length < 1) {
-                    // 如果动物不够，清空已使用集合并重置可用动物
-                    usedDirectionAnimals.clear();
-                    availableDirectionAnimals = [...animalDirections];
+                const isMultipleMode = Math.random() < 0.5; // 随机选择单箭头或多箭头模式
+                arrowTest.mode = isMultipleMode ? 'multiple' : 'single';
+                
+                if (arrowTest.mode === 'single') {
+                    // 单箭头模式
+                    const direction = arrowTest.directions[Math.floor(Math.random() * arrowTest.directions.length)];
+                    const color = arrowTest.colors[Math.floor(Math.random() * arrowTest.colors.length)];
+                    
+                    // 添加测试问题
+                    questions.push({
+                        type: 'direction',
+                        size: sizeLevels[i],
+                        mode: 'single',
+                        direction: direction,
+                        color: color
+                    });
+                } else {
+                    // 多箭头模式
+                    const numArrows = 3; // 显示3个箭头
+                    const arrows = [];
+                    const usedColors = new Set();
+                    const usedDirections = new Set();
+                    
+                    // 生成箭头
+                    for (let j = 0; j < numArrows; j++) {
+                        let color, direction;
+                        do {
+                            color = arrowTest.colors[Math.floor(Math.random() * arrowTest.colors.length)];
+                        } while (usedColors.has(color.name));
+                        
+                        do {
+                            direction = arrowTest.directions[Math.floor(Math.random() * arrowTest.directions.length)];
+                        } while (usedDirections.has(direction.name));
+                        
+                        usedColors.add(color.name);
+                        usedDirections.add(direction.name);
+                        arrows.push({ color, direction });
+                    }
+                    
+                    // 随机选择一个箭头作为目标
+                    const targetArrow = arrows[Math.floor(Math.random() * arrows.length)];
+                    
+                    // 添加测试问题
+                    questions.push({
+                        type: 'direction',
+                        size: sizeLevels[i],
+                        mode: 'multiple',
+                        arrows: arrows,
+                        targetArrow: targetArrow
+                    });
                 }
-                
-                // 随机选择动物
-                const randomIndex = Math.floor(Math.random() * availableDirectionAnimals.length);
-                const animal = availableDirectionAnimals[randomIndex];
-                
-                // 随机选择方向
-                const directionIndex = Math.floor(Math.random() * animal.directions.length);
-                const direction = animal.directions[directionIndex];
-                
-                // 添加测试问题
-                questions.push({
-                    type: 'direction',
-                    size: sizeLevels[i],
-                    animal: animal,
-                    direction: direction
-                });
-                
-                // 标记这个动物为已使用
-                usedDirectionAnimals.add(animal.emoji);
-                
-                // 从可用动物中移除
-                availableDirectionAnimals = availableDirectionAnimals.filter(a => !usedDirectionAnimals.has(a.emoji));
             }
             break;
         case 'missing':
@@ -289,7 +326,7 @@ function prepareQuestions() {
                     size: sizeLevels[i],
                     full: animal.full,
                     animal: animal.name,
-                    partial: part.partial,
+                    part: part,
                     missing: part.missing
                 });
                 
@@ -302,26 +339,92 @@ function prepareQuestions() {
             break;
         case 'matching':
             // 配对游戏
+            // 创建一个已使用动物的集合，确保不会在短时间内重复
+            const usedMatchingAnimals = new Set();
+            // 深拷贝动物数组，不修改原数组
+            let availableMatchingAnimals = [...animals];
+            
             for (let i = 0; i < sizeLevels.length; i++) {
-                const randomAnimals = shuffle([...animals]).slice(0, 4);
+                // 确保我们有足够多的动物可选
+                if (availableMatchingAnimals.length < 4) {
+                    // 如果动物不够，清空已使用集合并重置可用动物
+                    usedMatchingAnimals.clear();
+                    availableMatchingAnimals = [...animals];
+                }
+                
+                // 从可用动物中随机选择
+                const shuffledAnimals = shuffle(availableMatchingAnimals);
+                const questionAnimals = shuffledAnimals.slice(0, 4);
+                
+                // 添加测试问题
                 questions.push({
                     type: 'matching',
                     size: sizeLevels[i],
-                    animal: randomAnimals[0],
-                    options: randomAnimals
+                    animal: questionAnimals[0],
+                    options: questionAnimals
+                });
+                
+                // 标记这些动物为已使用
+                questionAnimals.forEach(animal => {
+                    usedMatchingAnimals.add(animal.emoji);
+                    // 从可用动物中移除
+                    availableMatchingAnimals = availableMatchingAnimals.filter(a => !usedMatchingAnimals.has(a.emoji));
                 });
             }
             break;
         case 'differences':
             // 找不同游戏
+            // 创建一个已使用动物的集合，确保不会在短时间内重复
+            const usedDiffAnimals = new Set();
+            // 深拷贝动物数组，不修改原数组
+            let availableDiffAnimals = [...animals];
+            
             for (let i = 0; i < sizeLevels.length; i++) {
-                const randomAnimals = shuffle([...animals]).slice(0, 4);
+                // 确保我们有足够多的动物可选
+                if (availableDiffAnimals.length < 4) {
+                    // 如果动物不够，清空已使用集合并重置可用动物
+                    usedDiffAnimals.clear();
+                    availableDiffAnimals = [...animals];
+                }
+                
+                // 选择一个不同的动物
+                const differentAnimal = availableDiffAnimals[Math.floor(Math.random() * availableDiffAnimals.length)];
+                
+                // 选择三个相同的动物（与不同的动物不同）
+                const otherAnimals = availableDiffAnimals.filter(a => a.emoji !== differentAnimal.emoji);
+                if (otherAnimals.length < 1) {
+                    // 如果没有足够的其他动物，重置可用动物
+                    usedDiffAnimals.clear();
+                    availableDiffAnimals = [...animals];
+                    i--; // 重试这一轮
+                    continue;
+                }
+                
+                const sameAnimal = otherAnimals[Math.floor(Math.random() * otherAnimals.length)];
+                
+                // 创建动物数组（一个不同，三个相同）
+                const animalSet = [
+                    differentAnimal,
+                    { ...sameAnimal },
+                    { ...sameAnimal },
+                    { ...sameAnimal }
+                ];
+                
+                // 添加测试问题
                 questions.push({
                     type: 'differences',
                     size: sizeLevels[i],
-                    differentAnimal: randomAnimals[0],
-                    animals: randomAnimals
+                    differentAnimal: differentAnimal,
+                    sameAnimal: sameAnimal,
+                    animals: animalSet
                 });
+                
+                // 标记这些动物为已使用
+                usedDiffAnimals.add(differentAnimal.emoji);
+                usedDiffAnimals.add(sameAnimal.emoji);
+                
+                // 从可用动物中移除
+                availableDiffAnimals = availableDiffAnimals.filter(a => !usedDiffAnimals.has(a.emoji));
             }
             break;
     }
@@ -361,69 +464,65 @@ function showQuestion() {
             break;
             
         case 'direction':
-            // 动物朝向测试
-            
-            // 根据方向生成朝向动物
-            let directionEmoji = '';
-            const directions = ["上", "下", "左", "右"];
-            const directionSymbols = ["⬆️", "⬇️", "⬅️", "➡️"];
-            const correctIndex = directionSymbols.indexOf(question.direction);
-            
-            // 确定动物朝向的CSS类
-            let directionClass = '';
-            if (question.direction === "⬆️") {
-                directionClass = 'animal-up';
-            } else if (question.direction === "⬇️") {
-                directionClass = 'animal-down';
-            } else if (question.direction === "⬅️") {
-                directionClass = 'animal-left';
-            } else if (question.direction === "➡️") {
-                directionClass = 'animal-right';
-            }
-            
-            // 添加相应的方向箭头
-            let directionArrow = '';
-            if (question.direction === "⬆️") {
-                directionArrow = '⬆️';
-            } else if (question.direction === "⬇️") {
-                directionArrow = '⬇️';
-            } else if (question.direction === "⬅️") {
-                directionArrow = '⬅️';
-            } else if (question.direction === "➡️") {
-                directionArrow = '➡️';
-            }
-            
-            html = `
-                <p>这个${question.animal.name}在看哪个方向？</p>
-                <div class="animal-direction-container">
-                    <div class="animal-image ${directionClass}" style="font-size: ${question.size}rem">
-                        ${question.animal.emoji}
-                        <span class="direction-arrow">${directionArrow}</span>
+            // 箭头测试
+            if (question.mode === 'single') {
+                // 单箭头模式
+                html = `
+                    <p>这个${question.color.name}箭头指向哪个方向？</p>
+                    <div class="arrow-container">
+                        <div class="arrow" style="color: ${question.color.value}; font-size: ${question.size}rem">
+                            ${question.direction.symbol}
+                        </div>
                     </div>
-                </div>
-                <div class="option-container">
-            `;
-            
-            directions.forEach((dir, index) => {
-                html += `<button onclick="checkAnswer('${dir}')">${dir}</button>`;
-            });
-            
-            html += `</div>`;
-            correctAnswer = directions[correctIndex];
+                    <div class="option-container">
+                `;
+                
+                const directions = ["上", "下", "左", "右"];
+                directions.forEach(dir => {
+                    html += `<button onclick="checkAnswer('${dir}')">${dir}</button>`;
+                });
+                
+                html += `</div>`;
+                correctAnswer = question.direction.name;
+            } else {
+                // 多箭头模式
+                html = `
+                    <p>请指出${question.targetArrow.color.name}箭头指向的方向</p>
+                    <div class="arrow-container">
+                `;
+                
+                question.arrows.forEach(arrow => {
+                    html += `
+                        <div class="arrow" style="color: ${arrow.color.value}; font-size: ${question.size}rem">
+                            ${arrow.direction.symbol}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    </div>
+                    <div class="option-container">
+                `;
+                
+                const directions = ["上", "下", "左", "右"];
+                directions.forEach(dir => {
+                    html += `<button onclick="checkAnswer('${dir}')">${dir}</button>`;
+                });
+                
+                html += `</div>`;
+                correctAnswer = question.targetArrow.direction.name;
+            }
             break;
             
         case 'missing':
             // 缺失部分测试
+            const part = question.part;
             html = `
                 <p>这个${question.animal}缺少了什么部分？</p>
-                <div class="animal-image" style="font-size: ${question.size}rem">
-                    ${question.full}
-                </div>
-                <div class="missing-container">
-                    <p>下面是缺失部分的动物：</p>
-                    <div class="animal-image" style="font-size: ${question.size}rem; margin-top: 10px; color: #ff6b88;">
-                        ${question.partial}
-                    </div>
+                <div class="animal-container" style="font-size: ${question.size/8}rem">
+                    <div class="animal">${question.full}</div>
+                    <div class="${part.className} missing"></div>
+                    <div class="missing-marker ${part.type}-marker"></div>
                 </div>
                 <div class="option-container">
             `;
@@ -441,8 +540,8 @@ function showQuestion() {
             });
             
             // 生成选项，确保正确答案在其中
-            const shuffledOptions = shuffle([...allMissingOptions]);
-            let finalOptions = shuffledOptions.slice(0, 3);
+            const missingShuffledOptions = shuffle([...allMissingOptions]);
+            let finalOptions = missingShuffledOptions.slice(0, 3);
             
             // 如果正确答案不在选项中，添加它
             if (!finalOptions.includes(question.missing)) {
@@ -489,16 +588,18 @@ function showQuestion() {
         case 'differences':
             // 找不同游戏
             html = `
-                <p>找出与众不同的一个：</p>
+                <p>找出与其他不同的动物：</p>
                 <div class="animal-grid">
             `;
             
-            const differentAnimal = question.differentAnimal;
+            // 打乱动物数组，确保不同的动物位置随机
             const shuffledDiffOptions = shuffle([...question.animals]);
             
+            // 显示四个动物，其中一个不同
             shuffledDiffOptions.forEach(animal => {
+                const isCorrect = animal.emoji === question.differentAnimal.emoji;
                 html += `
-                    <div class="animal-card" onclick="checkAnswer('${animal.name}')">
+                    <div class="animal-card ${isCorrect ? 'correct-animal' : ''}" onclick="checkAnswer('${animal.name}')">
                         <div class="animal-image" style="font-size: ${question.size}rem">
                             ${animal.emoji}
                         </div>
@@ -507,7 +608,7 @@ function showQuestion() {
             });
             
             html += `</div>`;
-            correctAnswer = differentAnimal.name;
+            correctAnswer = question.differentAnimal.name;
             break;
     }
     
@@ -525,16 +626,23 @@ function checkAnswer(answer) {
             smallestSuccessSize = currentSize;
         }
         
-        // 如果是动物朝向测试，先显示正确的方向
+        // 如果是箭头测试，直接显示下一题
         if (question.type === 'direction') {
-            // 显示箭头
-            document.querySelector('.animal-image').classList.add('show-arrow');
+            currentQuestion++;
+            showQuestion();
+            return;
+        }
+        
+        // 如果是找不同游戏，高亮显示正确答案
+        if (question.type === 'differences') {
+            // 高亮正确答案
+            document.querySelector('.correct-animal').classList.add('highlight');
             
             // 等待一秒再显示下一题
             setTimeout(() => {
                 currentQuestion++;
                 showQuestion();
-            }, 1000);
+            }, 1500);
             return;
         }
         
@@ -554,17 +662,23 @@ function showResults() {
     
     // 根据最小成功尺寸评估视力
     let resultMessage = "";
-    if (smallestSuccessSize <= 1) {
-        resultMessage = "视力非常好！可以看清最小的图案。";
+    
+    // 使用更精确的模拟视力评估
+    if (smallestSuccessSize <= 0.8) {
+        resultMessage = "视力非常好！相当于成人正常视力。小朋友能看清非常小的图案。";
+    } else if (smallestSuccessSize <= 1) {
+        resultMessage = "视力很好！相当于成人较好的视力。小朋友能看清大部分小图案。";
     } else if (smallestSuccessSize <= 2) {
-        resultMessage = "视力很好！可以看清大部分图案。";
+        resultMessage = "视力良好，在正常范围内。小朋友能看清大多数图案。";
+    } else if (smallestSuccessSize <= 3) {
+        resultMessage = "视力正常，可以看清中等大小的图案。建议1-2年后再次检查。";
     } else if (smallestSuccessSize <= 4) {
-        resultMessage = "视力正常，可以看清中等大小的图案。";
+        resultMessage = "视力略低于正常水平，建议半年后再次测试。如果小朋友有看不清的情况，可以咨询儿童眼科医生。";
     } else {
-        resultMessage = "视力可能需要进一步检查，建议咨询专业眼科医生。";
+        resultMessage = "建议带小朋友去医院做专业的儿童视力检查，以获得更准确的评估。";
     }
     
-    document.getElementById('result-message').textContent = resultMessage;
+    document.getElementById('result-message').innerHTML = resultMessage + `<br><br>小朋友能看清的最小尺寸：${smallestSuccessSize} rem`;
 }
 
 // 返回首页
@@ -588,6 +702,19 @@ function shuffle(array) {
     }
     
     return array;
+}
+
+// 下一题按钮功能
+function nextQuestion() {
+    // 如果没有更多问题，显示结果
+    if (currentQuestion >= questions.length - 1) {
+        showResults();
+        return;
+    }
+    
+    // 显示下一题
+    currentQuestion++;
+    showQuestion();
 }
 
 // 页面加载完成后初始化
