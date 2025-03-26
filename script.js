@@ -183,6 +183,24 @@ const arrowTest = {
     mode: 'single' // 'single' 或 'multiple'
 };
 
+// 视力表测试配置
+const chartTest = {
+    letters: ['E'],  // 只使用字母E
+    rotations: [0, 90, 180, 270],  // 旋转角度：0度（向右）、90度（向上）、180度（向左）、270度（向下）
+    rows: [
+        { size: 1, count: 1 },   // 0.1
+        { size: 2, count: 2 },   // 0.2
+        { size: 3, count: 3 },   // 0.3
+        { size: 4, count: 4 },   // 0.4
+        { size: 5, count: 5 },   // 0.5
+        { size: 6, count: 6 },   // 0.6
+        { size: 7, count: 7 },   // 0.7
+        { size: 8, count: 8 },   // 0.8
+        { size: 9, count: 9 },   // 0.9
+        { size: 10, count: 10 }  // 1.0
+    ]
+};
+
 // 开始测试
 function startTest(testType) {
     currentTest = testType;
@@ -427,6 +445,20 @@ function prepareQuestions() {
                 availableDiffAnimals = availableDiffAnimals.filter(a => !usedDiffAnimals.has(a.emoji));
             }
             break;
+        case 'chart':
+            // 视力表测试
+            chartTest.currentRow = 0;
+            chartTest.currentLetter = 0;
+            chartTest.correctCount = 0;
+            chartTest.wrongCount = 0;
+            
+            // 生成视力表问题
+            questions.push({
+                type: 'chart',
+                row: chartTest.rows[0],
+                letter: chartTest.letters[Math.floor(Math.random() * chartTest.letters.length)]
+            });
+            break;
     }
 }
 
@@ -610,6 +642,36 @@ function showQuestion() {
             html += `</div>`;
             correctAnswer = question.differentAnimal.name;
             break;
+        case 'chart':
+            // 视力表测试
+            html = `
+                <p>请指出每个字母E的开口方向：</p>
+                <div class="chart-container">
+            `;
+            
+            // 生成完整的视力表
+            chartTest.rows.forEach((row, rowIndex) => {
+                html += `<div class="chart-row">`;
+                for (let i = 0; i < row.count; i++) {
+                    const rotation = chartTest.rotations[Math.floor(Math.random() * chartTest.rotations.length)];
+                    html += `
+                        <div class="chart-letter chart-size-${row.size}" 
+                             style="transform: rotate(${rotation}deg)"
+                             onclick="toggleLetter(this)">
+                            E
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            });
+            
+            html += `
+                </div>
+                <div class="option-container">
+                    <button onclick="showResults()">完成测试</button>
+                </div>
+            `;
+            break;
     }
     
     testContainer.innerHTML = html;
@@ -655,30 +717,61 @@ function checkAnswer(answer) {
     }
 }
 
+// 添加字母点击切换函数
+function toggleLetter(element) {
+    // 先移除所有字母的选中状态
+    document.querySelectorAll('.chart-letter').forEach(letter => {
+        letter.classList.remove('selected');
+    });
+    
+    // 如果点击的字母没有被选中，则选中它
+    if (!element.classList.contains('selected')) {
+        element.classList.add('selected');
+    }
+}
+
 // 显示结果
 function showResults() {
     document.getElementById('test-screen').classList.remove('active');
     document.getElementById('result-screen').classList.add('active');
     
-    // 根据最小成功尺寸评估视力
     let resultMessage = "";
     
-    // 使用更精确的模拟视力评估
-    if (smallestSuccessSize <= 0.8) {
-        resultMessage = "视力非常好！相当于成人正常视力。小朋友能看清非常小的图案。";
-    } else if (smallestSuccessSize <= 1) {
-        resultMessage = "视力很好！相当于成人较好的视力。小朋友能看清大部分小图案。";
-    } else if (smallestSuccessSize <= 2) {
-        resultMessage = "视力良好，在正常范围内。小朋友能看清大多数图案。";
-    } else if (smallestSuccessSize <= 3) {
-        resultMessage = "视力正常，可以看清中等大小的图案。建议1-2年后再次检查。";
-    } else if (smallestSuccessSize <= 4) {
-        resultMessage = "视力略低于正常水平，建议半年后再次测试。如果小朋友有看不清的情况，可以咨询儿童眼科医生。";
+    if (currentTest === 'chart') {
+        // 视力表测试结果
+        const selectedCount = document.querySelectorAll('.chart-letter.selected').length;
+        const totalCount = document.querySelectorAll('.chart-letter').length;
+        const visionLevel = (selectedCount / totalCount) * 1.0;
+        
+        if (visionLevel >= 0.8) {
+            resultMessage = "视力良好，在正常范围内。";
+        } else if (visionLevel >= 0.6) {
+            resultMessage = "视力正常，建议1-2年后再次检查。";
+        } else if (visionLevel >= 0.4) {
+            resultMessage = "视力略低于正常水平，建议半年后复查。";
+        } else {
+            resultMessage = "建议咨询专业眼科医生。";
+        }
+        resultMessage += `<br><br>测试结果：${visionLevel.toFixed(1)}`;
     } else {
-        resultMessage = "建议带小朋友去医院做专业的儿童视力检查，以获得更准确的评估。";
+        // 其他测试的结果显示逻辑保持不变
+        if (smallestSuccessSize <= 0.8) {
+            resultMessage = "视力非常好！相当于成人正常视力。小朋友能看清非常小的图案。";
+        } else if (smallestSuccessSize <= 1) {
+            resultMessage = "视力很好！相当于成人较好的视力。小朋友能看清大部分小图案。";
+        } else if (smallestSuccessSize <= 2) {
+            resultMessage = "视力良好，在正常范围内。小朋友能看清大多数图案。";
+        } else if (smallestSuccessSize <= 3) {
+            resultMessage = "视力正常，可以看清中等大小的图案。建议1-2年后再次检查。";
+        } else if (smallestSuccessSize <= 4) {
+            resultMessage = "视力略低于正常水平，建议半年后再次测试。如果小朋友有看不清的情况，可以咨询儿童眼科医生。";
+        } else {
+            resultMessage = "建议带小朋友去医院做专业的儿童视力检查，以获得更准确的评估。";
+        }
+        resultMessage += `<br><br>小朋友能看清的最小尺寸：${smallestSuccessSize} rem`;
     }
     
-    document.getElementById('result-message').innerHTML = resultMessage + `<br><br>小朋友能看清的最小尺寸：${smallestSuccessSize} rem`;
+    document.getElementById('result-message').innerHTML = resultMessage;
 }
 
 // 返回首页

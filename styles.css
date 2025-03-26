@@ -226,3 +226,86 @@ button:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* 视力表测试样式 */
+.chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 800px;
+}
+
+.chart-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px 0;
+    gap: 10px;
+    width: 100%;
+}
+
+.chart-letter {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #333;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    transform-origin: center;
+}
+
+.chart-letter:hover {
+    background-color: #e0e0e0;
+}
+
+.chart-letter.selected {
+    background-color: #5b9aff;
+    color: white;
+}
+
+/* 视力表大小级别 */
+.chart-size-1 { font-size: 2.5rem; }  /* 0.1 */
+.chart-size-2 { font-size: 2rem; }    /* 0.2 */
+.chart-size-3 { font-size: 1.8rem; }  /* 0.3 */
+.chart-size-4 { font-size: 1.6rem; }  /* 0.4 */
+.chart-size-5 { font-size: 1.4rem; }  /* 0.5 */
+.chart-size-6 { font-size: 1.2rem; }  /* 0.6 */
+.chart-size-7 { font-size: 1rem; }    /* 0.7 */
+.chart-size-8 { font-size: 0.9rem; }  /* 0.8 */
+.chart-size-9 { font-size: 0.8rem; }  /* 0.9 */
+.chart-size-10 { font-size: 0.7rem; } /* 1.0 */
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .chart-container {
+        padding: 10px;
+    }
+    
+    .chart-letter {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .chart-size-1 { font-size: 2rem; }
+    .chart-size-2 { font-size: 1.8rem; }
+    .chart-size-3 { font-size: 1.6rem; }
+    .chart-size-4 { font-size: 1.4rem; }
+    .chart-size-5 { font-size: 1.2rem; }
+    .chart-size-6 { font-size: 1rem; }
+    .chart-size-7 { font-size: 0.9rem; }
+    .chart-size-8 { font-size: 0.8rem; }
+    .chart-size-9 { font-size: 0.7rem; }
+    .chart-size-10 { font-size: 0.6rem; }
+}
